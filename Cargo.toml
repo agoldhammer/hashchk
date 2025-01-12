@@ -1,0 +1,11 @@
+[package]
+name = "hashchk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+bson = "2.13.0"
+clap = { version = "4.5.26", features = ["derive"] }
+mongodb = "3.1.1"
+serde = { version = "1.0.217", features = ["derive"] }

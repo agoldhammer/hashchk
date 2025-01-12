@@ -7,5 +7,7 @@ edition = "2021"
 anyhow = "1.0.95"
 bson = "2.13.0"
 clap = { version = "4.5.26", features = ["derive"] }
+futures = "0.3.31"
 mongodb = "3.1.1"
 serde = { version = "1.0.217", features = ["derive"] }
+tokio = "1.43.0"

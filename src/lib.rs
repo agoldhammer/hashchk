@@ -58,7 +58,9 @@ pub async fn get_hashrecords(dbname: &str) -> Result<()> {
             }
         }
     };
-    let pipeline = vec![sorter1, grouper, sorter2, filter];
+    // let pipeline = vec![sorter1, grouper, sorter2, filter];
+    let pipeline = vec![sorter1, grouper, sorter2];
+
     let mut cursor = articles.aggregate(pipeline).await?;
     println!("Printing hash records for hcount > 1");
     while let Some(doc) = cursor.try_next().await? {

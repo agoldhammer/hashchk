@@ -1,9 +1,10 @@
+#![allow(unused_imports)]
 use anyhow::Result;
+use futures::stream::TryStreamExt;
 use mongodb::bson::doc;
 use mongodb::options::FindOptions;
-use mongodb::{Client, Cursor};
+use mongodb::{Client, Collection, Cursor};
 use serde::{Deserialize, Serialize};
-// use std::collections::BTreeMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HashRecord {
@@ -12,16 +13,50 @@ pub struct HashRecord {
     pub hash: u32,
 }
 
-#[allow(dead_code)]
-const URI: &str = "mongodb://192.168.0.128:27017";
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HashCount {
+    pub hash: String,
+    pub hcount: u32,
+}
 
-pub async fn get_hashrecords(dbname: &str) -> Result<Cursor<HashRecord>> {
+#[allow(dead_code)]
+// const URI: &str = "mongodb://192.168.0.128:27017";
+const URI: &str = "mongodb://127.0.0.1:27017";
+
+pub async fn get_hashrecords(dbname: &str) -> Result<()> {
     let client = Client::with_uri_str(URI).await?;
     let db = client.database(dbname);
-    let find_options = FindOptions::builder()
-        .projection(doc! { "_id": 1, "hash": 1 })
-        .build(); // .projection(doc! { "_id": 1, "hash": 1 " }).build();
-    let collection = db.collection("articles");
-    let cursor = collection.find(doc! {}).with_options(find_options).await?;
-    Ok(cursor)
+    // let find_options = FindOptions::builder()
+    //     .projection(doc! { "_id": 1, "hash": 1 })
+    //     .build(); // .projection(doc! { "_id": 1, "hash": 1 " }).build();
+    let articles: Collection<HashRecord> = db.collection("articles");
+
+    let grouper = doc! {
+        "$group": doc! {
+            "hash": "$hash",
+            "hcount": doc! {
+                "$sum": 1
+            }
+        }
+    };
+    let sorter = doc! {
+        "$sort": doc! {
+            "hcount": -1
+        }
+    };
+    let filter = doc! {
+        "$match": doc! {
+            "hash": doc! {
+                "$gt": 1
+            }
+        }
+    };
+    let pipeline = vec![grouper, sorter, filter];
+    let mut cursor = articles.aggregate(pipeline).await?;
+    println!("Printing hash records for hcount > 1");
+    while let Some(doc) = cursor.try_next().await? {
+        println!("{:?}", doc);
+    }
+
+    Ok(())
 }

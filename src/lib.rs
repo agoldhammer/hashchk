@@ -31,15 +31,21 @@ pub async fn get_hashrecords(dbname: &str) -> Result<()> {
     //     .build(); // .projection(doc! { "_id": 1, "hash": 1 " }).build();
     let articles: Collection<HashRecord> = db.collection("articles");
 
+    let sorter1 = doc! {
+        "$sort": doc! {
+            "hash": -1
+        }
+    };
+
     let grouper = doc! {
         "$group": doc! {
-            "hash": "$hash",
+            "hash": doc! {"$first":"$hash"},
             "hcount": doc! {
                 "$sum": 1
             }
         }
     };
-    let sorter = doc! {
+    let sorter2 = doc! {
         "$sort": doc! {
             "hcount": -1
         }
@@ -51,7 +57,7 @@ pub async fn get_hashrecords(dbname: &str) -> Result<()> {
             }
         }
     };
-    let pipeline = vec![grouper, sorter, filter];
+    let pipeline = vec![sorter1, grouper, sorter2, filter];
     let mut cursor = articles.aggregate(pipeline).await?;
     println!("Printing hash records for hcount > 1");
     while let Some(doc) = cursor.try_next().await? {

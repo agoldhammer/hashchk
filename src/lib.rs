@@ -39,6 +39,7 @@ pub async fn get_hashrecords(dbname: &str) -> Result<()> {
 
     let grouper = doc! {
         "$group": doc! {
+            "_id": "$hash",
             "hash": doc! {"$first":"$hash"},
             "hcount": doc! {
                 "$sum": 1

@@ -1,4 +1,3 @@
-// use futures::stream::TryStreamExt;
 use hashchk::get_hashrecords;
 
 const DBNAME: &str = "actur";
